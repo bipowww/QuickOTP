@@ -1,0 +1,6 @@
+{
+  "client_id": "YOUR_AZURE_APP_CLIENT_ID",
+  "client_secret": "OPTIONAL_FOR_PUBLIC_CLIENT_LEAVE_EMPTY",
+  "tenant": "common",
+  "note": "Azure Portal → App registration → Mobile and desktop redirect: http://127.0.0.1. API permissions: User.Read, Mail.Read. Place as msal_client.json next to exe or in %LocalAppData%\\QuickOTP\\"
+}
