@@ -160,6 +160,9 @@ public partial class MainWindow : Window
 			NotificationsCheck.IsChecked = appSettings.ShowNotifications;
 			HotkeyCheck.IsChecked = appSettings.HotkeyEnabled;
 			HelloCheck.IsChecked = appSettings.RequireWindowsHelloForHistory;
+			ShowDiagCheck.IsChecked = appSettings.ShowAdvancedDiagnostics;
+			DiagTab.Visibility = appSettings.ShowAdvancedDiagnostics ? Visibility.Visible : Visibility.Collapsed;
+			UpdateOnboarding(all.Count == 0 && !appSettings.OnboardingDismissed);
 			ValidityBox.Text = appSettings.CodeValidityMinutes.ToString();
 			PollIntervalBox.Text = appSettings.PollIntervalSeconds.ToString();
 			HotkeyBox.Text = appSettings.HotkeyGesture;
@@ -402,15 +405,66 @@ public partial class MainWindow : Window
 		if (!string.IsNullOrEmpty(text))
 		{
 			await App.Instance.Clipboard.CopyLastAsync(text);
+			FlashCopied();
 		}
 	}
 
-	private void PrivacyToggle_Click(object sender, RoutedEventArgs e)
+	public void FlashCopied()
 	{
-		App.Instance.TogglePrivacyMode();
+		if (CopyFeedback == null)
+			return;
+		CopyFeedback.Opacity = 1;
+		var fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(1200))
+		{
+			BeginTime = TimeSpan.FromMilliseconds(600),
+			EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseIn }
+		};
+		CopyFeedback.BeginAnimation(UIElement.OpacityProperty, fade);
+		if (CopyCodeButton != null)
+			CopyCodeButton.Content = "Copié ✓";
+		var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1400) };
+		timer.Tick += (_, _) =>
+		{
+			timer.Stop();
+			if (CopyCodeButton != null)
+				CopyCodeButton.Content = "Copier le code";
+		};
+		timer.Start();
 	}
 
-	private async void AddGmail_Click(object sender, RoutedEventArgs e)
+	private void UpdateOnboarding(bool show)
+	{
+		if (OnboardingOverlay != null)
+			OnboardingOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+	}
+
+	private async void OnboardingGmail_Click(object sender, RoutedEventArgs e)
+	{
+		await AddGmailFlowAsync();
+		MaybeHideOnboarding();
+	}
+
+	private async void OnboardingOutlook_Click(object sender, RoutedEventArgs e)
+	{
+		await AddOutlookFlowAsync();
+		MaybeHideOnboarding();
+	}
+
+	private void OnboardingDismiss_Click(object sender, RoutedEventArgs e)
+	{
+		var s = App.Instance.SettingsStore.Load();
+		s.OnboardingDismissed = true;
+		App.Instance.SettingsStore.Save(s);
+		UpdateOnboarding(false);
+	}
+
+	private void MaybeHideOnboarding()
+	{
+		if (App.Instance.Accounts.GetAll().Count > 0)
+			UpdateOnboarding(false);
+	}
+
+	private async Task AddGmailFlowAsync()
 	{
 		try
 		{
@@ -429,7 +483,7 @@ public partial class MainWindow : Window
 		}
 	}
 
-	private async void AddMicrosoft_Click(object sender, RoutedEventArgs e)
+	private async Task AddOutlookFlowAsync()
 	{
 		try
 		{
@@ -445,6 +499,23 @@ public partial class MainWindow : Window
 		{
 			MessageBox.Show(ex.Message, "QuickOTP — Microsoft");
 		}
+	}
+
+	private void PrivacyToggle_Click(object sender, RoutedEventArgs e)
+	{
+		App.Instance.TogglePrivacyMode();
+	}
+
+	private async void AddGmail_Click(object sender, RoutedEventArgs e)
+	{
+		await AddGmailFlowAsync();
+		MaybeHideOnboarding();
+	}
+
+	private async void AddMicrosoft_Click(object sender, RoutedEventArgs e)
+	{
+		await AddOutlookFlowAsync();
+		MaybeHideOnboarding();
 	}
 
 	private async void RemoveAccount_Click(object sender, RoutedEventArgs e)
@@ -483,6 +554,32 @@ public partial class MainWindow : Window
 	{
 		App.Instance.HistoryStore?.Clear();
 		RefreshHistoryAsync();
+	}
+
+	private async void HistoryList_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+	{
+		if (HistoryList.SelectedItem == null)
+			return;
+		try
+		{
+			dynamic item = HistoryList.SelectedItem;
+			string? code = item.Raw is HistoryEntry he ? he.Code : null;
+			if (string.IsNullOrEmpty(code) && item.Code is string c)
+				code = c.Replace("•", "").Replace("·", "");
+			if (string.IsNullOrEmpty(code) || code.Contains('•') || code.Contains('·'))
+			{
+				if (item.Raw is HistoryEntry raw)
+					code = raw.Code;
+			}
+			if (!string.IsNullOrEmpty(code))
+			{
+				await App.Instance.Clipboard.CopyLastAsync(code);
+				FlashCopied();
+			}
+		}
+		catch
+		{
+		}
 	}
 
 	private void MarkFalsePositive_Click(object sender, RoutedEventArgs e)
@@ -559,6 +656,10 @@ public partial class MainWindow : Window
 		appSettings.ShowNotifications = NotificationsCheck.IsChecked == true;
 		appSettings.HotkeyEnabled = HotkeyCheck.IsChecked == true;
 		appSettings.RequireWindowsHelloForHistory = HelloCheck.IsChecked == true;
+		appSettings.ShowAdvancedDiagnostics = ShowDiagCheck.IsChecked == true;
+		DiagTab.Visibility = appSettings.ShowAdvancedDiagnostics ? Visibility.Visible : Visibility.Collapsed;
+		if (!appSettings.ShowAdvancedDiagnostics && MainTabs.SelectedItem == DiagTab)
+			MainTabs.SelectedIndex = 0;
 		appSettings.NotificationPrivacy = (NotificationPrivacy)Math.Clamp(NotifPrivacyBox.SelectedIndex, 0, 2);
 		AppSettings appSettings2 = appSettings;
 		appSettings2.ClipboardClearAfter = ClipboardClearBox.SelectedIndex switch

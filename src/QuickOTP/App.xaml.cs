@@ -165,6 +165,7 @@ public partial class App : System.Windows.Application
 			ShowDetectionNotification(s, result);
 			await ((DispatcherObject)this).Dispatcher.InvokeAsync((Action)delegate
 			{
+				SyncTrayLastCode();
 				_mainWindow?.RefreshUi();
 				_miniWindow?.Refresh();
 			});
@@ -210,8 +211,9 @@ public partial class App : System.Windows.Application
 		{
 			ShowMainWindow();
 			_mainWindow.ShowSettingsTab();
-		}, ExitApplication);
+		}, CopyLastCodeFromTray, ExitApplication);
 		_tray.SetPrivacyChecked(settings.PrivacyMode);
+		SyncTrayLastCode();
 		Notifications.AttachTray(_tray.ShowBalloon);
 		_tray.UpdateStatus(AppStatus.Idle, paused: false);
 		_pipe = new SingleInstancePipe(ShowMainWindow);
@@ -245,18 +247,26 @@ public partial class App : System.Windows.Application
 		}
 	}
 
-	private void OnHotkey()
+	private void OnHotkey() => CopyLastCodeFromTray();
+
+	public void CopyLastCodeFromTray()
 	{
-		string text = _orchestrator?.LastCode?.Code;
-		if (!string.IsNullOrEmpty(text))
+		string? text = _orchestrator?.LastCode?.Code;
+		if (string.IsNullOrEmpty(text) || _clipboard is null)
+			return;
+		_ = _clipboard.CopyLastAsync(text);
+		AppSettings appSettings = _settings.Load();
+		if (appSettings.NotificationPrivacy != NotificationPrivacy.Silent)
 		{
-			_clipboard.CopyLastAsync(text);
-			AppSettings appSettings = _settings.Load();
-			if (appSettings.NotificationPrivacy != NotificationPrivacy.Silent && !appSettings.PrivacyMode)
-			{
-				Notifications?.Show("QuickOTP", "Last OTP copied", (appSettings.NotificationPrivacy == NotificationPrivacy.Private) ? "" : text);
-			}
+			Notifications?.Show("QuickOTP", "Code copié", appSettings.PrivacyMode || appSettings.NotificationPrivacy == NotificationPrivacy.Private ? "" : text);
 		}
+		((DispatcherObject)this).Dispatcher.InvokeAsync(() => _mainWindow?.FlashCopied());
+	}
+
+	public void SyncTrayLastCode()
+	{
+		var s = _settings?.Load();
+		_tray?.SetLastCode(_orchestrator?.LastCode?.Code, s?.PrivacyMode == true);
 	}
 
 	public void TogglePrivacyMode()
@@ -265,6 +275,7 @@ public partial class App : System.Windows.Application
 		appSettings.PrivacyMode = !appSettings.PrivacyMode;
 		SettingsStore.Save(appSettings);
 		_tray?.SetPrivacyChecked(appSettings.PrivacyMode);
+		SyncTrayLastCode();
 		_mainWindow?.RefreshUi();
 		_miniWindow?.Refresh();
 	}

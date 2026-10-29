@@ -9,286 +9,337 @@
         FontFamily="{StaticResource UiFont}"
         Loaded="Window_Loaded"
         Closing="Window_Closing">
-  <DockPanel Margin="22,18,22,18">
-    <!-- Header -->
-    <Grid x:Name="HeaderBar" DockPanel.Dock="Top" Margin="0,0,0,14">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="Auto"/>
-      </Grid.ColumnDefinitions>
-      <StackPanel VerticalAlignment="Center">
-        <TextBlock Text="QuickOTP" FontSize="24" FontWeight="SemiBold" FontFamily="{StaticResource BrandFont}"
-                   Foreground="{StaticResource TextBrush}"/>
-        <TextBlock Text="Le prochain code arrive ici — rien ne quitte cet ordinateur"
-                   Style="{StaticResource MutedLabel}" Margin="0,2,0,0"/>
-      </StackPanel>
-      <Button x:Name="PrivacyToggle" Grid.Column="1" Content="Privé · OFF" Style="{StaticResource GhostButton}"
-              VerticalAlignment="Center" ToolTip="Masque les codes à l'écran" Click="PrivacyToggle_Click"/>
-    </Grid>
+  <Grid>
+    <DockPanel Margin="22,18,22,18">
+      <Grid x:Name="HeaderBar" DockPanel.Dock="Top" Margin="0,0,0,14">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="QuickOTP" FontSize="24" FontWeight="SemiBold" FontFamily="{StaticResource BrandFont}"/>
+          <TextBlock Text="Le prochain code arrive ici — rien ne quitte cet ordinateur"
+                     Style="{StaticResource MutedLabel}" Margin="0,2,0,0"/>
+        </StackPanel>
+        <Button x:Name="PrivacyToggle" Grid.Column="1" Content="Privé · OFF" Style="{StaticResource GhostButton}"
+                VerticalAlignment="Center" ToolTip="Masque les codes à l'écran" Click="PrivacyToggle_Click"/>
+      </Grid>
 
-    <TabControl x:Name="MainTabs">
-      <!-- 0 Accueil — job unique: voir / copier le code -->
-      <TabItem Header="Code">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,14,0,0">
-          <StackPanel x:Name="HomePanel" MaxWidth="720" HorizontalAlignment="Left">
-            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="16" Padding="22" Margin="0,0,0,14">
-              <StackPanel>
-                <Grid Margin="0,0,0,18">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                  </Grid.ColumnDefinitions>
-                  <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="{StaticResource MutedBrush}"
-                             Margin="0,0,8,0" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="StatusText" Text="En veille" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                  </StackPanel>
-                  <TextBlock x:Name="AccountsSummaryText" Grid.Column="1" Text="Aucun compte"
-                             Style="{StaticResource MutedLabel}" VerticalAlignment="Center"/>
-                </Grid>
-
-                <TextBlock x:Name="LastServiceText" Text="En attente d'un e-mail…" Style="{StaticResource MutedLabel}"/>
-                <TextBlock x:Name="LastCodeText" Text="········" FontSize="44" FontFamily="{StaticResource MonoFont}"
-                           FontWeight="SemiBold" Margin="0,8,0,6" Foreground="{StaticResource SuccessBrush}"/>
-                <TextBlock x:Name="LastMetaText" Text="Connectez Gmail ou Outlook pour commencer"
-                           Style="{StaticResource MutedLabel}" Margin="0,0,0,18"/>
-
-                <WrapPanel>
-                  <Button Content="Copier le code" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"
-                          Click="CopyLastCode_Click" ToolTip="Copie le dernier code détecté"/>
-                  <Button x:Name="PauseResumeButton" Content="Pause" Style="{StaticResource GhostButton}"
-                          Margin="0,0,8,8" Click="PauseResumeButton_Click"
-                          ToolTip="Met la surveillance en pause"/>
-                  <Button Content="Fenêtre compacte" Style="{StaticResource GhostButton}" Margin="0,0,0,8"
-                          Click="OpenMini_Click" ToolTip="Petite fenêtre toujours au premier plan"/>
-                </WrapPanel>
-              </StackPanel>
-            </Border>
-
-            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="14" Padding="18">
-              <StackPanel>
-                <DockPanel Margin="0,0,0,10">
-                  <TextBlock Text="Comptes connectés" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
-                  <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <Button Content="Gmail" Style="{StaticResource GhostButton}" Margin="0,0,6,0"
-                            Padding="12,7" Click="AddGmail_Click" ToolTip="Ajouter un compte Gmail"/>
-                    <Button Content="Outlook" Style="{StaticResource GhostButton}" Padding="12,7"
-                            Click="AddMicrosoft_Click" ToolTip="Ajouter Outlook / Microsoft 365"/>
-                  </StackPanel>
-                </DockPanel>
-                <TextBlock x:Name="SourcesText" Text="Aucun compte pour l'instant. Ajoutez Gmail ou Outlook ci-dessus."
-                           TextWrapping="Wrap" Style="{StaticResource MutedLabel}" LineHeight="20"/>
-              </StackPanel>
-            </Border>
-          </StackPanel>
-        </ScrollViewer>
-      </TabItem>
-
-      <!-- 1 Historique -->
-      <TabItem Header="Historique">
-        <DockPanel Margin="0,14,0,0">
-          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-            <TextBlock Text="Codes récents" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-              <Button Content="Pas un code" Style="{StaticResource GhostButton}" Margin="0,0,8,0"
-                      Click="MarkFalsePositive_Click"
-                      ToolTip="Signale la sélection pour améliorer la détection"/>
-              <Button Content="Tout effacer" Style="{StaticResource DangerButton}"
-                      Click="ClearHistory_Click"/>
-            </StackPanel>
-          </DockPanel>
-          <Grid>
-            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="12" Padding="6">
-              <ListView x:Name="HistoryList" BorderThickness="0" Background="Transparent">
-                <ListView.View>
-                  <GridView>
-                    <GridViewColumn Header="Service" DisplayMemberBinding="{Binding Service}" Width="130"/>
-                    <GridViewColumn Header="Code" DisplayMemberBinding="{Binding Code}" Width="130"/>
-                    <GridViewColumn Header="Heure" DisplayMemberBinding="{Binding Time}" Width="90"/>
-                    <GridViewColumn Header="Compte" DisplayMemberBinding="{Binding Account}" Width="180"/>
-                    <GridViewColumn Header="Expire" DisplayMemberBinding="{Binding Expires}" Width="100"/>
-                  </GridView>
-                </ListView.View>
-              </ListView>
-            </Border>
-            <TextBlock x:Name="HistoryEmptyText" Text="Aucun code pour l'instant."
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Style="{StaticResource MutedLabel}" FontSize="13"/>
-          </Grid>
-        </DockPanel>
-      </TabItem>
-
-      <!-- 2 Comptes -->
-      <TabItem Header="Comptes">
-        <DockPanel Margin="0,14,0,0">
-          <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-            <TextBlock Text="Boîtes mail surveillées" Style="{StaticResource SectionTitle}"/>
-            <TextBlock Text="Chaque compte utilise votre propre connexion OAuth. Les e-mails restent sur cet appareil."
-                       Style="{StaticResource HelperText}" Margin="0,0,0,12"/>
-            <WrapPanel>
-              <Button Content="Ajouter Gmail" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" Click="AddGmail_Click"/>
-              <Button Content="Ajouter Outlook" Style="{StaticResource GhostButton}" Margin="0,0,8,8" Click="AddMicrosoft_Click"/>
-              <Button Content="Activer / pause" Style="{StaticResource GhostButton}" Margin="0,0,8,8" Click="ToggleAccount_Click"
-                      ToolTip="Active ou met en pause le compte sélectionné"/>
-              <Button Content="Retirer" Style="{StaticResource DangerButton}" Margin="0,0,0,8" Click="RemoveAccount_Click"/>
-            </WrapPanel>
-          </StackPanel>
-          <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                  BorderThickness="1" CornerRadius="12" Padding="6">
-            <ListView x:Name="AccountsList" BorderThickness="0" Background="Transparent">
-              <ListView.View>
-                <GridView>
-                  <GridViewColumn Header="Service" DisplayMemberBinding="{Binding Provider}" Width="110"/>
-                  <GridViewColumn Header="Adresse" DisplayMemberBinding="{Binding Email}" Width="240"/>
-                  <GridViewColumn Header="État" DisplayMemberBinding="{Binding Status}" Width="120"/>
-                  <GridViewColumn Header="Actif" DisplayMemberBinding="{Binding Enabled}" Width="70"/>
-                  <GridViewColumn Header="Dernière erreur" DisplayMemberBinding="{Binding Error}" Width="220"/>
-                </GridView>
-              </ListView.View>
-            </ListView>
-          </Border>
-        </DockPanel>
-      </TabItem>
-
-      <!-- 3 Règles -->
-      <TabItem Header="Filtres">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,14,0,0">
-          <StackPanel MaxWidth="640" HorizontalAlignment="Left">
-            <TextBlock Text="Affiner la détection" Style="{StaticResource SectionTitle}"/>
-            <TextBlock Text="Une entrée par ligne. Utile si un site est mal détecté ou trop bruyant."
-                       Style="{StaticResource HelperText}" Margin="0,0,0,8"/>
-
-            <TextBlock Text="Toujours accepter ces domaines" Style="{StaticResource FieldLabel}" Margin="0,8,0,6"/>
-            <TextBox x:Name="AlwaysDomainsBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
-            <TextBlock Text="Ex. bankofamerica.com" Style="{StaticResource HelperText}"/>
-
-            <TextBlock Text="Ne jamais détecter ces domaines" Style="{StaticResource FieldLabel}"/>
-            <TextBox x:Name="NeverDomainsBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
-
-            <TextBlock Text="Renommer un service (domaine→Nom)" Style="{StaticResource FieldLabel}"/>
-            <TextBox x:Name="OverridesBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
-            <TextBlock Text="Ex. mail.paypal.com→PayPal" Style="{StaticResource HelperText}"/>
-
-            <TextBlock Text="Pas d'auto-copie pour ces services" Style="{StaticResource FieldLabel}"/>
-            <TextBox x:Name="NoAutoCopyBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
-          </StackPanel>
-        </ScrollViewer>
-      </TabItem>
-
-      <!-- 4 Réglages -->
-      <TabItem Header="Réglages">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,14,0,0">
-          <StackPanel MaxWidth="520" HorizontalAlignment="Left">
-            <TextBlock Text="Au quotidien" Style="{StaticResource SectionTitle}"/>
-            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
-              <StackPanel>
-                <CheckBox x:Name="LaunchAtStartupCheck" Content="Lancer avec Windows" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-                <CheckBox x:Name="AutoCopyCheck" Content="Copier automatiquement les codes" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-                <CheckBox x:Name="NotificationsCheck" Content="Afficher les notifications" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-                <CheckBox x:Name="HotkeyCheck" Content="Raccourci clavier global" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-                <TextBlock Text="Raccourci" Style="{StaticResource FieldLabel}"/>
-                <TextBox x:Name="HotkeyBox" LostFocus="Settings_Changed"/>
-              </StackPanel>
-            </Border>
-
-            <TextBlock Text="Confidentialité" Style="{StaticResource SectionTitle}"/>
-            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
-              <StackPanel>
-                <CheckBox x:Name="HelloCheck" Content="Windows Hello pour ouvrir l'historique" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
-                <TextBlock Text="Notifications" Style="{StaticResource FieldLabel}"/>
-                <ComboBox x:Name="NotifPrivacyBox" SelectionChanged="Settings_Changed">
-                  <ComboBoxItem Content="Normal — affiche le service"/>
-                  <ComboBoxItem Content="Privé — masque le code"/>
-                  <ComboBoxItem Content="Silencieux — pas de toast"/>
-                </ComboBox>
-                <TextBlock Text="Effacer le presse-papiers après" Style="{StaticResource FieldLabel}"/>
-                <ComboBox x:Name="ClipboardClearBox" SelectionChanged="Settings_Changed">
-                  <ComboBoxItem Content="Jamais"/>
-                  <ComboBoxItem Content="30 secondes"/>
-                  <ComboBoxItem Content="1 minute"/>
-                  <ComboBoxItem Content="2 minutes"/>
-                  <ComboBoxItem Content="5 minutes"/>
-                  <ComboBoxItem Content="10 minutes"/>
-                </ComboBox>
-                <TextBlock Text="Garder l'historique" Style="{StaticResource FieldLabel}"/>
-                <ComboBox x:Name="HistoryRetentionBox" SelectionChanged="Settings_Changed">
-                  <ComboBoxItem Content="Désactivé"/>
-                  <ComboBoxItem Content="15 minutes"/>
-                  <ComboBoxItem Content="1 heure"/>
-                  <ComboBoxItem Content="24 heures"/>
-                </ComboBox>
-              </StackPanel>
-            </Border>
-
-            <TextBlock Text="Avancé" Style="{StaticResource SectionTitle}"/>
-            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
-              <StackPanel>
-                <TextBlock Text="Durée de validité d'un code (minutes)" Style="{StaticResource FieldLabel}" Margin="0,0,0,6"/>
-                <TextBox x:Name="ValidityBox" LostFocus="Settings_Changed"/>
-                <TextBlock Text="Intervalle de synchro (secondes)" Style="{StaticResource FieldLabel}"/>
-                <TextBox x:Name="PollIntervalBox" LostFocus="Settings_Changed"/>
-                <TextBlock Text="L'app ajuste déjà le rythme selon l'activité ; gardez 5–15 s en usage normal."
-                           Style="{StaticResource HelperText}"/>
-                <TextBlock Text="Journal" Style="{StaticResource FieldLabel}"/>
-                <ComboBox x:Name="LogLevelBox" SelectionChanged="Settings_Changed">
-                  <ComboBoxItem Content="Désactivé"/>
-                  <ComboBoxItem Content="Erreurs seulement"/>
-                  <ComboBoxItem Content="Diagnostic"/>
-                </ComboBox>
-              </StackPanel>
-            </Border>
-
-            <Button Content="Abonnement…" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Click="Subscription_Click"/>
-          </StackPanel>
-        </ScrollViewer>
-      </TabItem>
-
-      <!-- 5 Diagnostics -->
-      <TabItem Header="Diag.">
-        <DockPanel Margin="0,14,0,0">
-          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-            <StackPanel>
-              <TextBlock Text="Santé de la synchro" Style="{StaticResource SectionTitle}" Margin="0,0,0,4"/>
-              <TextBlock Text="Pour dépanner un compte lent ou en erreur — pas besoin au quotidien."
-                         Style="{StaticResource HelperText}"/>
-            </StackPanel>
-            <Button DockPanel.Dock="Right" Content="Actualiser" Style="{StaticResource GhostButton}"
-                    VerticalAlignment="Top" HorizontalAlignment="Right" Click="RefreshDiagnostics_Click"/>
-          </DockPanel>
-          <ScrollViewer>
-            <StackPanel>
+      <TabControl x:Name="MainTabs">
+        <TabItem Header="Code">
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,14,0,0">
+            <StackPanel x:Name="HomePanel" MaxWidth="720" HorizontalAlignment="Left">
               <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                      BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,12">
+                      BorderThickness="1" CornerRadius="16" Padding="22" Margin="0,0,0,14">
                 <StackPanel>
-                  <TextBlock Text="Polling" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                  <TextBlock x:Name="DiagPollingText" Text="—" TextWrapping="Wrap"
-                             FontFamily="{StaticResource MonoFont}" FontSize="12"
-                             Foreground="{StaticResource MutedBrush}"/>
+                  <Grid Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                      <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="{StaticResource MutedBrush}"
+                               Margin="0,0,8,0" VerticalAlignment="Center"/>
+                      <TextBlock x:Name="StatusText" Text="En veille" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock x:Name="AccountsSummaryText" Grid.Column="1" Text="Aucun compte"
+                               Style="{StaticResource MutedLabel}" VerticalAlignment="Center"/>
+                  </Grid>
+
+                  <TextBlock x:Name="LastServiceText" Text="En attente d'un e-mail…" Style="{StaticResource MutedLabel}"/>
+                  <Grid Margin="0,8,0,6">
+                    <TextBlock x:Name="LastCodeText" Text="········" FontSize="44" FontFamily="{StaticResource MonoFont}"
+                               FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}"/>
+                    <TextBlock x:Name="CopyFeedback" Text="Copié" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Right"
+                               VerticalAlignment="Bottom" Opacity="0" Margin="0,0,4,8"/>
+                  </Grid>
+                  <TextBlock x:Name="LastMetaText" Text="Connectez Gmail ou Outlook pour commencer"
+                             Style="{StaticResource MutedLabel}" Margin="0,0,0,18"/>
+
+                  <WrapPanel>
+                    <Button x:Name="CopyCodeButton" Content="Copier le code" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"
+                            Click="CopyLastCode_Click" ToolTip="Copie le dernier code détecté"/>
+                    <Button x:Name="PauseResumeButton" Content="Pause" Style="{StaticResource GhostButton}"
+                            Margin="0,0,8,8" Click="PauseResumeButton_Click"/>
+                    <Button Content="Fenêtre compacte" Style="{StaticResource GhostButton}" Margin="0,0,0,8"
+                            Click="OpenMini_Click"/>
+                  </WrapPanel>
                 </StackPanel>
               </Border>
+
               <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                      BorderThickness="1" CornerRadius="12" Padding="16">
+                      BorderThickness="1" CornerRadius="14" Padding="18">
                 <StackPanel>
-                  <TextBlock Text="Latence" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                  <TextBlock x:Name="DiagLatencyText" Text="—" TextWrapping="Wrap"
-                             FontFamily="{StaticResource MonoFont}" FontSize="12"
-                             Foreground="{StaticResource MutedBrush}"/>
+                  <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="Comptes connectés" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                      <Button Content="Gmail" Style="{StaticResource GhostButton}" Margin="0,0,6,0"
+                              Padding="12,7" Click="AddGmail_Click"/>
+                      <Button Content="Outlook" Style="{StaticResource GhostButton}" Padding="12,7"
+                              Click="AddMicrosoft_Click"/>
+                    </StackPanel>
+                  </DockPanel>
+                  <TextBlock x:Name="SourcesText" Text="Aucun compte pour l'instant."
+                             TextWrapping="Wrap" Style="{StaticResource MutedLabel}" LineHeight="20"/>
                 </StackPanel>
               </Border>
             </StackPanel>
           </ScrollViewer>
-        </DockPanel>
-      </TabItem>
-    </TabControl>
-  </DockPanel>
+        </TabItem>
+
+        <TabItem Header="Historique">
+          <DockPanel Margin="0,14,0,0">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+              <TextBlock Text="Codes récents" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center"/>
+              <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <Button Content="Pas un code" Style="{StaticResource GhostButton}" Margin="0,0,8,0"
+                        Click="MarkFalsePositive_Click"/>
+                <Button Content="Tout effacer" Style="{StaticResource DangerButton}" Click="ClearHistory_Click"/>
+              </StackPanel>
+            </DockPanel>
+            <Grid>
+              <ListBox x:Name="HistoryList" Background="Transparent" BorderThickness="0"
+                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                       HorizontalContentAlignment="Stretch"
+                       MouseDoubleClick="HistoryList_MouseDoubleClick">
+                <ListBox.ItemContainerStyle>
+                  <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0,0,0,8"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Template">
+                      <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                          <Border x:Name="Bd" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                  BorderThickness="1" CornerRadius="12" Padding="14,12" Cursor="Hand">
+                            <ContentPresenter/>
+                          </Border>
+                          <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                              <Setter TargetName="Bd" Property="BorderBrush" Value="#FF5A6575"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                              <Setter TargetName="Bd" Property="BorderBrush" Value="#805EE0A0"/>
+                              <Setter TargetName="Bd" Property="Background" Value="{StaticResource SoftAccentBrush}"/>
+                            </Trigger>
+                          </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                      </Setter.Value>
+                    </Setter>
+                  </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <StackPanel>
+                        <TextBlock Text="{Binding Service}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding Account}" Style="{StaticResource MutedLabel}" Margin="0,2,0,0"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <TextBlock Text="{Binding Code}" FontFamily="{StaticResource MonoFont}" FontSize="18"
+                                   FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}"
+                                   HorizontalAlignment="Right"/>
+                        <TextBlock HorizontalAlignment="Right" Style="{StaticResource MutedLabel}" Margin="0,2,0,0">
+                          <Run Text="{Binding Time}"/>
+                          <Run Text=" · "/>
+                          <Run Text="{Binding Expires}"/>
+                        </TextBlock>
+                      </StackPanel>
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <TextBlock x:Name="HistoryEmptyText" Text="Aucun code pour l'instant."
+                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                         Style="{StaticResource MutedLabel}" FontSize="13"/>
+            </Grid>
+          </DockPanel>
+        </TabItem>
+
+        <TabItem Header="Comptes">
+          <DockPanel Margin="0,14,0,0">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+              <TextBlock Text="Boîtes mail surveillées" Style="{StaticResource SectionTitle}"/>
+              <TextBlock Text="Chaque compte utilise votre propre connexion OAuth. Les e-mails restent sur cet appareil."
+                         Style="{StaticResource HelperText}" Margin="0,0,0,12"/>
+              <WrapPanel>
+                <Button Content="Ajouter Gmail" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" Click="AddGmail_Click"/>
+                <Button Content="Ajouter Outlook" Style="{StaticResource GhostButton}" Margin="0,0,8,8" Click="AddMicrosoft_Click"/>
+                <Button Content="Activer / pause" Style="{StaticResource GhostButton}" Margin="0,0,8,8" Click="ToggleAccount_Click"/>
+                <Button Content="Retirer" Style="{StaticResource DangerButton}" Margin="0,0,0,8" Click="RemoveAccount_Click"/>
+              </WrapPanel>
+            </StackPanel>
+            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="12" Padding="6">
+              <ListView x:Name="AccountsList" BorderThickness="0" Background="Transparent">
+                <ListView.View>
+                  <GridView>
+                    <GridViewColumn Header="Service" DisplayMemberBinding="{Binding Provider}" Width="110"/>
+                    <GridViewColumn Header="Adresse" DisplayMemberBinding="{Binding Email}" Width="240"/>
+                    <GridViewColumn Header="État" DisplayMemberBinding="{Binding Status}" Width="120"/>
+                    <GridViewColumn Header="Actif" DisplayMemberBinding="{Binding Enabled}" Width="70"/>
+                    <GridViewColumn Header="Dernière erreur" DisplayMemberBinding="{Binding Error}" Width="220"/>
+                  </GridView>
+                </ListView.View>
+              </ListView>
+            </Border>
+          </DockPanel>
+        </TabItem>
+
+        <TabItem Header="Filtres">
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,14,0,0">
+            <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+              <TextBlock Text="Affiner la détection" Style="{StaticResource SectionTitle}"/>
+              <TextBlock Text="Une entrée par ligne. Utile si un site est mal détecté ou trop bruyant."
+                         Style="{StaticResource HelperText}" Margin="0,0,0,8"/>
+              <TextBlock Text="Toujours accepter ces domaines" Style="{StaticResource FieldLabel}" Margin="0,8,0,6"/>
+              <TextBox x:Name="AlwaysDomainsBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
+                       VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
+              <TextBlock Text="Ne jamais détecter ces domaines" Style="{StaticResource FieldLabel}"/>
+              <TextBox x:Name="NeverDomainsBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
+                       VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
+              <TextBlock Text="Renommer un service (domaine→Nom)" Style="{StaticResource FieldLabel}"/>
+              <TextBox x:Name="OverridesBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
+                       VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
+              <TextBlock Text="Pas d'auto-copie pour ces services" Style="{StaticResource FieldLabel}"/>
+              <TextBox x:Name="NoAutoCopyBox" AcceptsReturn="True" MinHeight="72" TextWrapping="Wrap"
+                       VerticalScrollBarVisibility="Auto" LostFocus="Rules_Save"/>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+
+        <TabItem Header="Réglages">
+          <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,14,0,0">
+            <StackPanel MaxWidth="520" HorizontalAlignment="Left">
+              <TextBlock Text="Au quotidien" Style="{StaticResource SectionTitle}"/>
+              <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                      BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
+                <StackPanel>
+                  <CheckBox x:Name="LaunchAtStartupCheck" Content="Lancer avec Windows" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                  <CheckBox x:Name="AutoCopyCheck" Content="Copier automatiquement les codes" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                  <CheckBox x:Name="NotificationsCheck" Content="Afficher les notifications" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                  <CheckBox x:Name="HotkeyCheck" Content="Raccourci clavier global" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                  <TextBlock Text="Raccourci" Style="{StaticResource FieldLabel}"/>
+                  <TextBox x:Name="HotkeyBox" LostFocus="Settings_Changed"/>
+                </StackPanel>
+              </Border>
+
+              <TextBlock Text="Confidentialité" Style="{StaticResource SectionTitle}"/>
+              <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                      BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
+                <StackPanel>
+                  <CheckBox x:Name="HelloCheck" Content="Windows Hello pour ouvrir l'historique" Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                  <TextBlock Text="Notifications" Style="{StaticResource FieldLabel}"/>
+                  <ComboBox x:Name="NotifPrivacyBox" SelectionChanged="Settings_Changed">
+                    <ComboBoxItem Content="Normal — affiche le service"/>
+                    <ComboBoxItem Content="Privé — masque le code"/>
+                    <ComboBoxItem Content="Silencieux — pas de toast"/>
+                  </ComboBox>
+                  <TextBlock Text="Effacer le presse-papiers après" Style="{StaticResource FieldLabel}"/>
+                  <ComboBox x:Name="ClipboardClearBox" SelectionChanged="Settings_Changed">
+                    <ComboBoxItem Content="Jamais"/>
+                    <ComboBoxItem Content="30 secondes"/>
+                    <ComboBoxItem Content="1 minute"/>
+                    <ComboBoxItem Content="2 minutes"/>
+                    <ComboBoxItem Content="5 minutes"/>
+                    <ComboBoxItem Content="10 minutes"/>
+                  </ComboBox>
+                  <TextBlock Text="Garder l'historique" Style="{StaticResource FieldLabel}"/>
+                  <ComboBox x:Name="HistoryRetentionBox" SelectionChanged="Settings_Changed">
+                    <ComboBoxItem Content="Désactivé"/>
+                    <ComboBoxItem Content="15 minutes"/>
+                    <ComboBoxItem Content="1 heure"/>
+                    <ComboBoxItem Content="24 heures"/>
+                  </ComboBox>
+                </StackPanel>
+              </Border>
+
+              <TextBlock Text="Avancé" Style="{StaticResource SectionTitle}"/>
+              <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                      BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,16">
+                <StackPanel>
+                  <CheckBox x:Name="ShowDiagCheck" Content="Afficher l'onglet Diagnostics"
+                            Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                  <TextBlock Text="Durée de validité d'un code (minutes)" Style="{StaticResource FieldLabel}"/>
+                  <TextBox x:Name="ValidityBox" LostFocus="Settings_Changed"/>
+                  <TextBlock Text="Intervalle de synchro (secondes)" Style="{StaticResource FieldLabel}"/>
+                  <TextBox x:Name="PollIntervalBox" LostFocus="Settings_Changed"/>
+                  <TextBlock Text="L'app ajuste déjà le rythme selon l'activité ; gardez 5–15 s en usage normal."
+                             Style="{StaticResource HelperText}"/>
+                  <TextBlock Text="Journal" Style="{StaticResource FieldLabel}"/>
+                  <ComboBox x:Name="LogLevelBox" SelectionChanged="Settings_Changed">
+                    <ComboBoxItem Content="Désactivé"/>
+                    <ComboBoxItem Content="Erreurs seulement"/>
+                    <ComboBoxItem Content="Diagnostic"/>
+                  </ComboBox>
+                </StackPanel>
+              </Border>
+
+              <Button Content="Abonnement…" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Click="Subscription_Click"/>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+
+        <TabItem x:Name="DiagTab" Header="Diag." Visibility="Collapsed">
+          <DockPanel Margin="0,14,0,0">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+              <StackPanel>
+                <TextBlock Text="Santé de la synchro" Style="{StaticResource SectionTitle}" Margin="0,0,0,4"/>
+                <TextBlock Text="Pour dépanner un compte lent ou en erreur." Style="{StaticResource HelperText}"/>
+              </StackPanel>
+              <Button DockPanel.Dock="Right" Content="Actualiser" Style="{StaticResource GhostButton}"
+                      VerticalAlignment="Top" HorizontalAlignment="Right" Click="RefreshDiagnostics_Click"/>
+            </DockPanel>
+            <ScrollViewer>
+              <StackPanel>
+                <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="12" Padding="16" Margin="0,0,0,12">
+                  <StackPanel>
+                    <TextBlock Text="Polling" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="DiagPollingText" Text="—" TextWrapping="Wrap"
+                               FontFamily="{StaticResource MonoFont}" FontSize="12"
+                               Foreground="{StaticResource MutedBrush}"/>
+                  </StackPanel>
+                </Border>
+                <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="12" Padding="16">
+                  <StackPanel>
+                    <TextBlock Text="Latence" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="DiagLatencyText" Text="—" TextWrapping="Wrap"
+                               FontFamily="{StaticResource MonoFont}" FontSize="12"
+                               Foreground="{StaticResource MutedBrush}"/>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </ScrollViewer>
+          </DockPanel>
+        </TabItem>
+      </TabControl>
+    </DockPanel>
+
+    <!-- Onboarding -->
+    <Border x:Name="OnboardingOverlay" Background="#E012151A" Visibility="Collapsed">
+      <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+              CornerRadius="18" Padding="28" MaxWidth="440" HorizontalAlignment="Center" VerticalAlignment="Center"
+              Margin="24">
+        <StackPanel>
+          <TextBlock Text="Bienvenue sur QuickOTP" FontSize="22" FontWeight="SemiBold"
+                     FontFamily="{StaticResource BrandFont}" Margin="0,0,0,8"/>
+          <TextBlock Text="Connectez une boîte mail. Les codes OTP seront détectés ici, copiés localement — sans serveur tiers."
+                     TextWrapping="Wrap" Style="{StaticResource MutedLabel}" LineHeight="20" Margin="0,0,0,20"/>
+          <Button Content="Connecter Gmail" Style="{StaticResource PrimaryButton}" Margin="0,0,0,10"
+                  HorizontalAlignment="Stretch" Click="OnboardingGmail_Click"/>
+          <Button Content="Connecter Outlook" Style="{StaticResource GhostButton}" Margin="0,0,0,10"
+                  HorizontalAlignment="Stretch" Click="OnboardingOutlook_Click"/>
+          <Button Content="Plus tard" Style="{StaticResource GhostButton}" HorizontalAlignment="Stretch"
+                  Opacity="0.85" Click="OnboardingDismiss_Click"/>
+        </StackPanel>
+      </Border>
+    </Border>
+  </Grid>
 </Window>

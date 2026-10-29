@@ -41,6 +41,10 @@ public sealed class AppSettings
 
 	public bool RequireWindowsHelloForHistory { get; set; }
 
+	public bool OnboardingDismissed { get; set; }
+
+	public bool ShowAdvancedDiagnostics { get; set; }
+
 	public string? ConnectedEmail { get; set; }
 
 	public ulong? LastHistoryId { get; set; }

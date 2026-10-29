@@ -9,103 +9,69 @@ namespace QuickOTP.Services;
 public sealed class TrayService : IDisposable
 {
 	private readonly NotifyIcon _icon;
-
 	private readonly ToolStripMenuItem _pauseItem;
-
 	private readonly ToolStripMenuItem _resumeItem;
-
 	private readonly ToolStripMenuItem _privacyItem;
-
+	private readonly ToolStripMenuItem _copyItem;
 	private readonly Action _pause;
-
 	private readonly Action _resume;
+	private string? _lastCodePreview;
 
-	private bool _privacy;
-
-	public TrayService(Action showWindow, Action showMini, Action pause, Action resume, Action togglePrivacy, Action openSettings, Action exit)
+	public TrayService(
+		Action showWindow,
+		Action showMini,
+		Action pause,
+		Action resume,
+		Action togglePrivacy,
+		Action openSettings,
+		Action copyLastCode,
+		Action exit)
 	{
-		TrayService trayService = this;
 		_pause = pause;
 		_resume = resume;
-		_pauseItem = new ToolStripMenuItem("Pause Monitoring", null, delegate
-		{
-			trayService._pause();
-		});
-		_resumeItem = new ToolStripMenuItem("Resume Monitoring", null, delegate
-		{
-			trayService._resume();
-		})
-		{
-			Enabled = false
-		};
-		_privacyItem = new ToolStripMenuItem("Privacy Mode", null, delegate
-		{
-			togglePrivacy();
-		})
-		{
-			CheckOnClick = true
-		};
-		ContextMenuStrip contextMenuStrip = new ContextMenuStrip
-		{
-			Items = 
-			{
-				{
-					"Open QuickOTP",
-					(Image?)null,
-					(EventHandler?)delegate
-					{
-						showWindow();
-					}
-				},
-				{
-					"Quick Codes",
-					(Image?)null,
-					(EventHandler?)delegate
-					{
-						showMini();
-					}
-				},
-				(ToolStripItem)new ToolStripSeparator(),
-				(ToolStripItem)_pauseItem,
-				(ToolStripItem)_resumeItem,
-				(ToolStripItem)_privacyItem,
-				(ToolStripItem)new ToolStripSeparator(),
-				{
-					"Settings",
-					(Image?)null,
-					(EventHandler?)delegate
-					{
-						openSettings();
-					}
-				},
-				(ToolStripItem)new ToolStripSeparator(),
-				{
-					"Quit",
-					(Image?)null,
-					(EventHandler?)delegate
-					{
-						exit();
-					}
-				}
-			}
-		};
+
+		_pauseItem = new ToolStripMenuItem("Mettre en pause", null, (_, _) => _pause());
+		_resumeItem = new ToolStripMenuItem("Reprendre", null, (_, _) => _resume()) { Enabled = false };
+		_privacyItem = new ToolStripMenuItem("Mode privé", null, (_, _) => togglePrivacy()) { CheckOnClick = true };
+		_copyItem = new ToolStripMenuItem("Copier le dernier code", null, (_, _) => copyLastCode()) { Enabled = false };
+
+		var menu = new ContextMenuStrip();
+		menu.Items.Add("Ouvrir QuickOTP", null, (_, _) => showWindow());
+		menu.Items.Add("Fenêtre compacte", null, (_, _) => showMini());
+		menu.Items.Add(new ToolStripSeparator());
+		menu.Items.Add(_copyItem);
+		menu.Items.Add(new ToolStripSeparator());
+		menu.Items.Add(_pauseItem);
+		menu.Items.Add(_resumeItem);
+		menu.Items.Add(_privacyItem);
+		menu.Items.Add(new ToolStripSeparator());
+		menu.Items.Add("Réglages", null, (_, _) => openSettings());
+		menu.Items.Add(new ToolStripSeparator());
+		menu.Items.Add("Quitter", null, (_, _) => exit());
+
 		_icon = new NotifyIcon
 		{
 			Icon = LoadIcon(),
 			Text = "QuickOTP",
 			Visible = true,
-			ContextMenuStrip = contextMenuStrip
+			ContextMenuStrip = menu
 		};
-		_icon.DoubleClick += delegate
-		{
-			showWindow();
-		};
+		_icon.DoubleClick += (_, _) => showWindow();
 	}
 
-	public void SetPrivacyChecked(bool on)
+	public void SetPrivacyChecked(bool on) => _privacyItem.Checked = on;
+
+	public void SetLastCode(string? code, bool privacyMode)
 	{
-		_privacy = on;
-		_privacyItem.Checked = on;
+		_lastCodePreview = code;
+		_copyItem.Enabled = !string.IsNullOrEmpty(code);
+		if (string.IsNullOrEmpty(code))
+		{
+			_copyItem.Text = "Copier le dernier code";
+			return;
+		}
+		var shown = privacyMode ? new string('·', Math.Clamp(code.Length, 4, 8)) : code;
+		_copyItem.Text = "Copier " + shown;
 	}
 
 	public void ShowBalloon(string title, string text)
@@ -124,54 +90,26 @@ public sealed class TrayService : IDisposable
 
 	public void UpdateStatus(AppStatus status, bool paused)
 	{
-		ToolStripMenuItem pauseItem = _pauseItem;
-		bool flag = !paused;
-		if (flag)
-		{
-			bool flag2 = ((status == AppStatus.Monitoring || status == AppStatus.Error) ? true : false);
-			flag = flag2;
-		}
-		pauseItem.Enabled = flag;
+		_pauseItem.Enabled = !paused && (status == AppStatus.Monitoring || status == AppStatus.Error);
 		_resumeItem.Enabled = paused;
-		NotifyIcon icon = _icon;
-		string text;
-		switch (status)
+		_icon.Text = status switch
 		{
-		case AppStatus.Monitoring:
-			if (!paused)
-			{
-				text = "QuickOTP — Active";
-				break;
-			}
-			goto default;
-		case AppStatus.Paused:
-			text = "QuickOTP — Paused";
-			break;
-		case AppStatus.NotConnected:
-			text = "QuickOTP — No account";
-			break;
-		case AppStatus.Error:
-			text = "QuickOTP — Error";
-			break;
-		case AppStatus.Connecting:
-			text = "QuickOTP — Connecting…";
-			break;
-		default:
-			text = "QuickOTP";
-			break;
-		}
-		icon.Text = text;
+			AppStatus.Monitoring when !paused => "QuickOTP — Actif",
+			AppStatus.Paused => "QuickOTP — En pause",
+			AppStatus.NotConnected => "QuickOTP — Sans compte",
+			AppStatus.Error => "QuickOTP — Erreur",
+			AppStatus.Connecting => "QuickOTP — Connexion…",
+			_ => "QuickOTP"
+		};
 	}
 
 	private static Icon LoadIcon()
 	{
 		try
 		{
-			string text = Path.Combine(AppContext.BaseDirectory, "Assets", "quickotp.ico");
-			if (File.Exists(text))
-			{
-				return new Icon(text);
-			}
+			var path = Path.Combine(AppContext.BaseDirectory, "Assets", "quickotp.ico");
+			if (File.Exists(path))
+				return new Icon(path);
 			return SystemIcons.Application;
 		}
 		catch
