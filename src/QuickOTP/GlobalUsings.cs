@@ -1,0 +1,16 @@
+global using Application = System.Windows.Application;
+global using Brush = System.Windows.Media.Brush;
+global using FontFamily = System.Windows.Media.FontFamily;
+global using Button = System.Windows.Controls.Button;
+global using ComboBox = System.Windows.Controls.ComboBox;
+global using MessageBox = System.Windows.MessageBox;
+global using MessageBoxButton = System.Windows.MessageBoxButton;
+global using MessageBoxImage = System.Windows.MessageBoxImage;
+global using MessageBoxResult = System.Windows.MessageBoxResult;
+global using HorizontalAlignment = System.Windows.HorizontalAlignment;
+global using VerticalAlignment = System.Windows.VerticalAlignment;
+global using Color = System.Windows.Media.Color;
+global using Brushes = System.Windows.Media.Brushes;
+global using UserControl = System.Windows.Controls.UserControl;
+global using Panel = System.Windows.Controls.Panel;
+global using Clipboard = System.Windows.Clipboard;

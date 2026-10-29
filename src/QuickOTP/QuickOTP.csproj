@@ -1,32 +1,31 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>QuickOTP</AssemblyName>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <OutputType>WinExe</OutputType>
-    <UseWPF>True</UseWPF>
-    <TargetFramework>netcoreapp8.0</TargetFramework>
-    <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup>
-    <LangVersion>12.0</LangVersion>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <RootNamespace />
+    <RootNamespace>QuickOTP</RootNamespace>
+    <AssemblyName>QuickOTP</AssemblyName>
+    <Version>1.0.3</Version>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="assets\quickotp.ico" />
-    <None Remove="mainwindow.baml" />
-    <None Remove="app.baml" />
-    <EmbeddedResource Include="assets\quickotp.ico" LogicalName="assets/quickotp.ico" />
-    <EmbeddedResource Include="mainwindow.baml" LogicalName="mainwindow.baml" />
-    <EmbeddedResource Include="app.baml" LogicalName="app.baml" />
+    <ProjectReference Include="..\QuickOTP.Core\QuickOTP.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="QuickOTP.Core">
-      <HintPath>..\..\..\..\..\..\AppData\Local\Programs\QuickOTP\app\QuickOTP.Core.dll</HintPath>
-    </Reference>
+    <Resource Include="Assets\quickotp.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Exclude leftover ILSpy dump folders -->
+    <Compile Remove="QuickOTP\**" />
+    <Compile Remove="QuickOTP.Services\**" />
+    <Compile Remove="Properties\**" />
+    <Page Remove="QuickOTP\**" />
+    <EmbeddedResource Remove="QuickOTP\**" />
+    <None Remove="app.baml" />
+    <None Remove="mainwindow.baml" />
   </ItemGroup>
 </Project>

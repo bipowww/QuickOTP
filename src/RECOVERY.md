@@ -1,3 +1,3 @@
-# Sources restaurees par decompilation (ilspycmd) le 2026-10-29.
-# Core: rebuildable (net8.0).
-# UI: BAML + code-behind decompile — XAML original a reconstruire avant un publish UI depuis source.
+# Sources restaurees (ilspycmd) puis XAML reconstruit le 2026-10-29.
+# Core + UI WPF: rebuildables (net8.0-windows).
+# Anciens dumps ILSpy: dossiers QuickOTP/ et QuickOTP.Services/ exclus du csproj.

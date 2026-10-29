@@ -43,17 +43,26 @@ Remove-Item $out -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path "$out\app" | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $root "dist") | Out-Null
 
-# Rebuild Core into artifacts when sources are present
-$coreProj = Join-Path $root "src\QuickOTP.Core\QuickOTP.Core.csproj"
+# Rebuild app (UI + Core) into artifacts when sources are present
+$uiProj = Join-Path $root "src\QuickOTP\QuickOTP.csproj"
 $artifactsApp = Join-Path $root "artifacts\app"
-if (Test-Path $coreProj) {
-    Write-Host "== Build QuickOTP.Core ==" -ForegroundColor Cyan
+if (Test-Path $uiProj) {
+    Write-Host "== Build QuickOTP app (WPF + Core) ==" -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path $artifactsApp | Out-Null
-    $coreOut = Join-Path $root "artifacts\core-build"
-    Remove-Item $coreOut -Recurse -Force -ErrorAction SilentlyContinue
-    dotnet publish $coreProj -c Release -o $coreOut
-    if ($LASTEXITCODE -ne 0) { throw "dotnet publish Core failed" }
-    Copy-Item (Join-Path $coreOut "QuickOTP.Core.dll") (Join-Path $artifactsApp "QuickOTP.Core.dll") -Force
+    $appOut = Join-Path $root "artifacts\app-build"
+    Remove-Item $appOut -Recurse -Force -ErrorAction SilentlyContinue
+    dotnet publish $uiProj -c Release -r win-x64 --self-contained false -p:DebugType=none -p:Version=$Version -o $appOut
+    if ($LASTEXITCODE -ne 0) { throw "dotnet publish app failed" }
+    Copy-Item (Join-Path $appOut "QuickOTP.exe") (Join-Path $artifactsApp "QuickOTPApp.exe") -Force
+    Get-ChildItem $appOut -File | Where-Object {
+        $_.Extension -in ".dll", ".json" -and $_.Name -notlike "*.pdb"
+    } | ForEach-Object {
+        Copy-Item $_.FullName (Join-Path $artifactsApp $_.Name) -Force
+    }
+    if (Test-Path (Join-Path $appOut "Assets")) {
+        Copy-Item (Join-Path $appOut "Assets") (Join-Path $artifactsApp "Assets") -Recurse -Force
+    }
+    Remove-Item (Join-Path $artifactsApp "*.pdb") -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host "== Build launcher ==" -ForegroundColor Cyan

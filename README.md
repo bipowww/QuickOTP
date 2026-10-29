@@ -12,9 +12,7 @@ Ce depot contient actuellement :
 - `scripts/` — publish / install
 - Les binaires de l'app WPF (`QuickOTP` / `QuickOTP.Core`) sont distribues dans les [Releases](https://github.com/bipowww/QuickOTP/releases)
 
-> `QuickOTP.Core` a ete restaure par decompilation ILSpy et **compile a nouveau**.
-> L'UI WPF (`src/QuickOTP`) est presente en forme decompilee (BAML) mais **pas encore rebuildable** :
-> le package shippe encore `QuickOTP.dll` / `QuickOTPApp.exe` depuis `artifacts/app`.
+> Sources **Core + UI WPF** rebuildables. `Publish-Update.ps1` compile depuis `src/` vers `artifacts/app`.
 
 ## Installation (amis)
 
