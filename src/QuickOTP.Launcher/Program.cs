@@ -15,7 +15,6 @@ internal static class Program
         var root = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         var appDir = Path.Combine(root, "app");
         var appExe = Path.Combine(appDir, "QuickOTPApp.exe");
-        // Backward compat if older package used QuickOTP.exe inside app/
         if (!File.Exists(appExe))
             appExe = Path.Combine(appDir, "QuickOTP.exe");
 
@@ -25,14 +24,29 @@ internal static class Program
         }
         catch (Exception ex)
         {
-            // Never block launch on update failure (offline, etc.)
-            Debug.WriteLine(ex);
+            try
+            {
+                MessageBox.Show(
+                    "Mise a jour impossible (l'app va demarrer quand meme).\n\n" + ex.Message,
+                    "QuickOTP",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            catch
+            {
+                Debug.WriteLine(ex);
+            }
         }
+
+        // Re-resolve after update may have replaced files
+        appExe = Path.Combine(appDir, "QuickOTPApp.exe");
+        if (!File.Exists(appExe))
+            appExe = Path.Combine(appDir, "QuickOTP.exe");
 
         if (!File.Exists(appExe))
         {
             MessageBox.Show(
-                "Fichiers de l'application introuvables (dossier app/).\nRéinstallez QuickOTP.",
+                "Fichiers de l'application introuvables (dossier app/).\nReinstallez QuickOTP.",
                 "QuickOTP",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
@@ -67,22 +81,16 @@ internal static class UpdateService
         if (manifest is null || string.IsNullOrWhiteSpace(manifest.Version) || string.IsNullOrWhiteSpace(manifest.Url))
             return;
 
+        if (string.IsNullOrWhiteSpace(manifest.Sha256))
+            throw new InvalidOperationException("Manifeste invalide: sha256 manquant.");
+
         var localVersion = ReadLocalVersion(installRoot);
         if (!IsNewer(manifest.Version, localVersion))
             return;
 
-        var result = MessageBox.Show(
-            $"Une mise à jour QuickOTP est disponible ({localVersion} → {manifest.Version}).\n\nInstaller maintenant ?",
-            "QuickOTP — Mise à jour",
-            MessageBoxButtons.YesNo,
-            MessageBoxIcon.Information);
-
-        if (result != DialogResult.Yes)
-            return;
-
         ApplyUpdate(installRoot, manifest);
         MessageBox.Show(
-            $"Mise à jour {manifest.Version} installée.",
+            $"QuickOTP a ete mis a jour ({localVersion} -> {manifest.Version}).",
             "QuickOTP",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
@@ -93,12 +101,11 @@ internal static class UpdateService
         var local = Path.Combine(installRoot, "update-feed.url");
         if (File.Exists(local))
         {
-            var url = File.ReadAllText(local).Trim();
+            var url = File.ReadAllText(local).Trim().TrimStart('\uFEFF');
             if (url.Length > 0 && !url.StartsWith('#'))
                 return url;
         }
 
-        // Default public feed (GitHub Releases asset). Override via update-feed.url
         return "https://github.com/bipowww/QuickOTP/releases/latest/download/update.json";
     }
 
@@ -107,7 +114,7 @@ internal static class UpdateService
         var path = Path.Combine(installRoot, "version.txt");
         if (File.Exists(path))
         {
-            var v = File.ReadAllText(path).Trim();
+            var v = File.ReadAllText(path).Trim().TrimStart('\uFEFF');
             if (v.Length > 0) return v;
         }
         return typeof(Program).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
@@ -120,7 +127,7 @@ internal static class UpdateService
         using var resp = Http.Send(req, ct);
         if (!resp.IsSuccessStatusCode)
             return null;
-        var json = resp.Content.ReadAsStringAsync(ct).GetAwaiter().GetResult();
+        var json = resp.Content.ReadAsStringAsync(ct).GetAwaiter().GetResult().Trim().TrimStart('\uFEFF');
         return JsonSerializer.Deserialize(json, UpdateJsonContext.Default.UpdateManifest);
     }
 
@@ -141,6 +148,10 @@ internal static class UpdateService
 
     private static void ApplyUpdate(string installRoot, UpdateManifest manifest)
     {
+        if (!Uri.TryCreate(manifest.Url, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttps))
+            throw new InvalidOperationException("URL de mise a jour invalide (HTTPS requis).");
+
         var tempDir = Path.Combine(Path.GetTempPath(), "QuickOTP-update-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
         try
@@ -148,35 +159,34 @@ internal static class UpdateService
             var zipPath = Path.Combine(tempDir, "update.zip");
             Download(manifest.Url!, zipPath);
 
-            if (!string.IsNullOrWhiteSpace(manifest.Sha256))
-            {
-                var hash = ComputeSha256(zipPath);
-                if (!hash.Equals(manifest.Sha256.Trim(), StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("Contrôle d'intégrité SHA256 échoué.");
-            }
+            var hash = ComputeSha256(zipPath);
+            if (!hash.Equals(manifest.Sha256!.Trim(), StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Controle d'integrite SHA256 echoue.");
 
             var extractDir = Path.Combine(tempDir, "extracted");
             Directory.CreateDirectory(extractDir);
             System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: true);
 
-            // Package layout: zip contains QuickOTP.exe (launcher), update-feed.url, version.txt, app/*
-            // Or zip contains only app/* payload — detect both.
-            var payloadRoot = extractDir;
             if (!File.Exists(Path.Combine(extractDir, "QuickOTP.exe")) &&
                 Directory.Exists(Path.Combine(extractDir, "app")))
             {
-                // launcher-less payload: only refresh app/
                 ReplaceDirectory(Path.Combine(extractDir, "app"), Path.Combine(installRoot, "app"));
             }
             else
             {
-                // Full package: copy everything except don't delete user LocalAppData
-                foreach (var file in Directory.GetFiles(payloadRoot, "*", SearchOption.AllDirectories))
+                foreach (var file in Directory.GetFiles(extractDir, "*", SearchOption.AllDirectories))
                 {
-                    var rel = Path.GetRelativePath(payloadRoot, file);
+                    var rel = Path.GetRelativePath(extractDir, file);
+                    // Never pull user secrets from a package
+                    var name = Path.GetFileName(rel);
+                    if (name.Equals("client_secret.json", StringComparison.OrdinalIgnoreCase) ||
+                        name.Equals("accounts.json", StringComparison.OrdinalIgnoreCase) ||
+                        name.EndsWith(".dpapi", StringComparison.OrdinalIgnoreCase) ||
+                        name.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     var dest = Path.Combine(installRoot, rel);
                     Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
-                    // Don't overwrite the running launcher until end — copy to .new then swap via helper
                     if (rel.Equals("QuickOTP.exe", StringComparison.OrdinalIgnoreCase))
                     {
                         File.Copy(file, dest + ".new", overwrite: true);
@@ -185,25 +195,7 @@ internal static class UpdateService
                     File.Copy(file, dest, overwrite: true);
                 }
 
-                var pending = Path.Combine(installRoot, "QuickOTP.exe.new");
-                if (File.Exists(pending))
-                {
-                    // Schedule replace after exit using cmd
-                    var bat = Path.Combine(installRoot, "_apply_launcher.bat");
-                    File.WriteAllText(bat,
-                        "@echo off\r\n" +
-                        "timeout /t 1 /nobreak >nul\r\n" +
-                        "move /y \"QuickOTP.exe.new\" \"QuickOTP.exe\" >nul\r\n" +
-                        "del \"%~f0\"\r\n");
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = $"/c \"{bat}\"",
-                        WorkingDirectory = installRoot,
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    });
-                }
+                ScheduleLauncherSwap(installRoot);
             }
 
             File.WriteAllText(Path.Combine(installRoot, "version.txt"), manifest.Version!.Trim());
@@ -212,6 +204,38 @@ internal static class UpdateService
         {
             try { Directory.Delete(tempDir, recursive: true); } catch { /* ignore */ }
         }
+    }
+
+    private static void ScheduleLauncherSwap(string installRoot)
+    {
+        var pending = Path.Combine(installRoot, "QuickOTP.exe.new");
+        if (!File.Exists(pending))
+            return;
+
+        var bat = Path.Combine(installRoot, "_apply_launcher.bat");
+        var launcher = Path.Combine(installRoot, "QuickOTP.exe");
+        File.WriteAllText(bat,
+            "@echo off\r\n" +
+            "setlocal\r\n" +
+            "cd /d \"%~dp0\"\r\n" +
+            "set /a n=0\r\n" +
+            ":retry\r\n" +
+            "timeout /t 1 /nobreak >nul\r\n" +
+            "move /y \"QuickOTP.exe.new\" \"QuickOTP.exe\" >nul 2>&1\r\n" +
+            "if not exist \"QuickOTP.exe.new\" goto done\r\n" +
+            "set /a n+=1\r\n" +
+            "if %n% LSS 15 goto retry\r\n" +
+            ":done\r\n" +
+            "del \"%~f0\" >nul 2>&1\r\n");
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            Arguments = $"/c \"{bat}\"",
+            WorkingDirectory = installRoot,
+            CreateNoWindow = true,
+            UseShellExecute = false
+        });
+        _ = launcher;
     }
 
     private static void ReplaceDirectory(string source, string dest)
@@ -244,6 +268,8 @@ internal static class UpdateService
         }
         foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
         {
+            if (file.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase))
+                continue;
             var rel = Path.GetRelativePath(source, file);
             var target = Path.Combine(dest, rel);
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);

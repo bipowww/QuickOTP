@@ -28,6 +28,7 @@ AppData/
 installer/Output/
 dist/
 publish/
+artifacts/
 
 ## OS
 Thumbs.db
