@@ -150,7 +150,9 @@ public partial class MainWindow : Window
 				_ => $"{num} comptes connectés", 
 			};
 			RefreshLastCodeOnly();
-			SourcesText.Text = ((all.Count == 0) ? "Aucune source connectée." : string.Join("\n", all.Select((AccountInfo a) => $"{a.Provider}  ·  {(a.Enabled ? a.Status.ToString() : "Désactivé")}  ·  {a.Email ?? "—"}")));
+			SourcesText.Text = ((all.Count == 0)
+				? "Aucun compte pour l'instant. Utilisez Gmail ou Outlook ci-dessus — ça prend moins d'une minute."
+				: string.Join("\n", all.Select((AccountInfo a) => $"{a.Provider}  ·  {(a.Enabled ? StatusFr(a.Status) : "En pause")}  ·  {a.Email ?? "—"}")));
 			PauseResumeButton.Content = ((orchestrator != null && orchestrator.IsPaused) ? "Reprendre" : "Pause");
 			PauseResumeButton.IsEnabled = orchestrator != null;
 			LaunchAtStartupCheck.IsChecked = appSettings.LaunchAtStartup;
@@ -202,7 +204,7 @@ public partial class MainWindow : Window
 		{
 			LastServiceText.Text = "En attente d’un e-mail…";
 			LastCodeText.Text = "········";
-			LastMetaText.Text = "Ajoutez Gmail ou Outlook pour démarrer";
+			LastMetaText.Text = "Connectez Gmail ou Outlook pour commencer";
 		}
 		else
 		{
@@ -260,7 +262,7 @@ public partial class MainWindow : Window
 				Provider = a.Provider.ToString(),
 				Email = (a.Email ?? "—"),
 				Status = a.Status.ToString(),
-				Enabled = (a.Enabled ? "Yes" : "No"),
+				Enabled = (a.Enabled ? "Oui" : "Non"),
 				Error = (a.LastError ?? ""),
 				Id = a.Id
 			}).ToList();
@@ -343,6 +345,15 @@ public partial class MainWindow : Window
 		}
 		return when.ToLocalTime().ToString("g");
 	}
+
+	private static string StatusFr(AccountConnectionStatus status) => status switch
+	{
+		AccountConnectionStatus.Connected => "Connecté",
+		AccountConnectionStatus.Error => "Erreur",
+		AccountConnectionStatus.Disabled => "Désactivé",
+		AccountConnectionStatus.Disconnected => "Déconnecté",
+		_ => status.ToString()
+	};
 
 	private static string Truncate(string? s, int max)
 	{

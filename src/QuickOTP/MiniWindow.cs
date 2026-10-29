@@ -24,30 +24,30 @@ public class MiniWindow : Window
 		//IL_0271: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0276: Unknown result type (might be due to invalid IL or missing references)
 		//IL_028f: Expected O, but got Unknown
-		base.Title = "QuickOTP";
-		base.Width = 320.0;
-		base.Height = 400.0;
+		base.Title = "QuickOTP — compact";
+		base.Width = 300.0;
+		base.Height = 380.0;
 		base.WindowStyle = WindowStyle.ToolWindow;
-		base.ResizeMode = ResizeMode.NoResize;
+		base.ResizeMode = ResizeMode.CanMinimize;
 		base.ShowInTaskbar = false;
 		base.Topmost = true;
 		base.Background = (Brush)Application.Current.FindResource("WindowBgBrush");
 		base.FontFamily = (FontFamily)Application.Current.FindResource("UiFont");
 		DockPanel dockPanel = new DockPanel
 		{
-			Margin = new Thickness(18.0)
+			Margin = new Thickness(16.0)
 		};
 		TextBlock element = new TextBlock
 		{
-			Text = "QuickOTP",
-			FontSize = 18.0,
+			Text = "Codes prêts",
+			FontSize = 16.0,
 			FontWeight = FontWeights.SemiBold,
 			FontFamily = (FontFamily)Application.Current.FindResource("BrandFont"),
-			Margin = new Thickness(0.0, 0.0, 0.0, 4.0)
+			Margin = new Thickness(0.0, 0.0, 0.0, 2.0)
 		};
 		TextBlock element2 = new TextBlock
 		{
-			Text = "Codes valides",
+			Text = "Cliquez pour copier",
 			Foreground = (Brush)Application.Current.FindResource("MutedBrush"),
 			FontSize = 12.0,
 			Margin = new Thickness(0.0, 0.0, 0.0, 14.0)
